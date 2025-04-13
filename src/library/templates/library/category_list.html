@@ -1,52 +1,107 @@
 {% extends 'base.html' %}
 
-{% block title %}Categories - Library App{% endblock %}
+{% block title %}Library App - Home{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">🏷️ Categories</h1>
+<div class="jumbotron py-5">
+    <div class="container text-center">
+        <h1>📚 Welcome to the Library App ✨</h1>
+        <p>Explore our collection of books, authors, and categories. 🔍</p>
+    </div>
+</div>
 
-<div class="row" id="category-list">
-    <!-- Aquí se llenarán las categorías con JavaScript -->
+<!-- Usar flexbox para las tarjetas -->
+<div class="row mt-5">
+    <div class="col-md-3 col-sm-6">
+        <div class="card">
+            <div class="card-body">
+                <h5>📕 Books</h5>
+                <p id="total_books">Loading...</p>
+                <a href="{% url 'book_list' %}" class="btn">Browse Books</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card">
+            <div class="card-body">
+                <h5>👨‍🎨 Authors</h5>
+                <p id="total_authors">Loading...</p>
+                <a href="{% url 'author_list' %}" class="btn">View Authors</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card">
+            <div class="card-body">
+                <h5>🏷️ Categories</h5>
+                <p id="total_categories">Loading...</p>
+                <a href="{% url 'category_list' %}" class="btn">Explore Categories</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+        <div class="card">
+            <div class="card-body">
+                <h5>🏢 Publishers</h5>
+                <p id="total_publishers">Loading...</p>
+                <a href="#" class="btn">See Publishers</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Books 📚</h5>
+            </div>
+            <div class="card-body">
+                <ul id="recent_books">
+                    <li>Loading...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Popular Categories 🔝</h5>
+            </div>
+            <div class="card-body">
+                <ul id="popular_categories">
+                    <li>Loading...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    // Hacer una solicitud AJAX para obtener las categorías
-    fetch('/api/categories/')
+    fetch('/api/home/')
         .then(response => response.json())
         .then(data => {
-            const categoryListContainer = document.getElementById('category-list');
-            
-            if (data.length === 0) {
-                categoryListContainer.innerHTML = `
-                    <div class="col-12">
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> No categories available yet. 📭
-                        </div>
-                    </div>
-                `;
-            } else {
-                // Iterar sobre las categorías y añadirlas al DOM
-                data.forEach(category => {
-                    const categoryCard = `
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h5 class="card-title">${category.name} 🏷️</h5>
-                                    <p class="card-text">${category.description.length > 100 ? category.description.substring(0, 100) + '...' : category.description}</p>
-                                    <p class="card-text">
-                                        <span class="badge bg-primary">${category.book_count} book${category.book_count > 1 ? 's' : ''} 📚</span>
-                                    </p>
-                                    <a href="/categories/${category.slug}/" class="btn btn-primary">View Books 👀</a>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    categoryListContainer.innerHTML += categoryCard;
-                });
-            }
+            document.getElementById('total_books').textContent = data.total_books;
+            document.getElementById('total_authors').textContent = data.total_authors;
+            document.getElementById('total_categories').textContent = data.total_categories;
+            document.getElementById('total_publishers').textContent = data.total_publishers;
+
+            const recentBooksList = document.getElementById('recent_books');
+            data.recent_books.forEach(book => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `<a href="/books/${book.id}/">${book.title}</a>`;
+                recentBooksList.appendChild(listItem);
+            });
+
+            const popularCategoriesList = document.getElementById('popular_categories');
+            data.categories.forEach(category => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `<a href="/categories/${category.slug}/">${category.name}</a> <span class="badge">${category.book_count}</span>`;
+                popularCategoriesList.appendChild(listItem);
+            });
         })
         .catch(error => {
-            console.error('Error fetching categories:', error);
+            console.error('Error loading data:', error);
         });
 </script>
 {% endblock %}
