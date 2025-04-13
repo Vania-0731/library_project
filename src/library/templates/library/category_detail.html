@@ -4,8 +4,8 @@
 
 {% block content %}
 <div class="card mb-4">
-    <div class="card-header bg-primary text-white">
-        <h1 class="mb-0" id="category-name">Loading... 🏷️</h1>
+    <div class="card-header">
+        <h1 id="category-name">Loading... 🏷️</h1>
     </div>
     <div class="card-body">
         <p id="category-description"></p>
@@ -17,13 +17,13 @@
     <!-- JS will render book cards here -->
 </div>
 
-<a href="{% url 'category_list' %}" class="btn btn-secondary mt-4">
+<a href="{% url 'category_list' %}" class="btn mt-4">
     <i class="bi bi-arrow-left"></i> Back to Categories
 </a>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const slug = window.location.pathname.split('/').filter(Boolean).pop(); // get last segment of URL
+        const slug = window.location.pathname.split('/').filter(Boolean).pop(); // Get last segment of URL
 
         fetch(`/api/categories/${slug}/`)
             .then(response => {
@@ -41,26 +41,20 @@
                 booksList.innerHTML = '';
 
                 if (!books.length) {
-                    booksList.innerHTML = `
-                        <div class="col-12">
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle"></i> No books in this category yet. 📭
-                            </div>
-                        </div>
-                    `;
+                    booksList.innerHTML = `<div class="alert">No books in this category yet. 📭</div>`;
                     return;
                 }
 
                 books.forEach(book => {
                     const card = document.createElement('div');
-                    card.classList.add('col-md-4', 'mb-4');
+                    card.classList.add('col-md-4');
                     card.innerHTML = `
-                        <div class="card h-100">
+                        <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title">${book.title} 📖</h5>
+                                <h5>${book.title} 📖</h5>
                                 <h6 class="card-subtitle mb-2 text-muted">By ${book.author.name} ✍️</h6>
-                                <p class="card-text">${book.summary.slice(0, 100)}...</p>
-                                <a href="/books/${book.id}" class="btn btn-primary">View Book 👀</a>
+                                <p>${book.summary.slice(0, 100)}...</p>
+                                <a href="/books/${book.id}" class="btn">View Book 👀</a>
                             </div>
                         </div>
                     `;
