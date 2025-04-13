@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'library',
     'rest_framework',
+    'users',
+    'analytics',
 ]
 
 MIDDLEWARE = [
@@ -125,3 +127,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'users.LibraryUser'  # Si tienes un modelo personalizado
+
+LOGIN_REDIRECT_URL = 'home'  # Redirección después de login
+LOGIN_URL = '/users/login/'  # Redirección al login si no está autenticado
+
