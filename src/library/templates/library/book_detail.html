@@ -4,8 +4,8 @@
 
 {% block content %}
 <div class="card mb-4">
-    <div class="card-header bg-primary text-white">
-        <h1 class="mb-0" id="book-title">Loading... 📖</h1>
+    <div class="card-header">
+        <h1 id="book-title">Loading... 📖</h1>
     </div>
     <div class="card-body">
         <h5><strong>Author:</strong> <a id="author-link" href="#">Loading ✍️</a></h5>
@@ -25,17 +25,15 @@
 </div>
 
 <div class="card">
-    <div class="card-header bg-primary text-white">
-        <h2 class="h5 mb-0">🏢 Publishers</h2>
+    <div class="card-header">
+        <h2>🏢 Publishers</h2>
     </div>
     <div class="card-body" id="publisher-section">
-        <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> No publisher information available. 📭
-        </div>
+        <div class="alert">No publisher information available. 📭</div>
     </div>
 </div>
 
-<a href="{% url 'book_list' %}" class="btn btn-secondary mt-4">
+<a href="{% url 'book_list' %}" class="btn mt-4">
     <i class="bi bi-arrow-left"></i> Back to Books
 </a>
 
@@ -49,56 +47,39 @@
                 return response.json();
             })
             .then(book => {
-                // Title
                 document.getElementById("book-title").innerText = `${book.title} 📖`;
-
-                // Author
-                const authorLink = document.getElementById("author-link");
-                authorLink.href = `/authors/${book.author.id}/`;
-                authorLink.innerText = `${book.author.name} ✍️`;
-
-                // ISBN & Date
+                document.getElementById("author-link").innerText = book.author.name;
                 document.getElementById("book-isbn").innerText = book.isbn;
                 document.getElementById("book-date").innerText = book.publication_date || "N/A";
 
-                // Categories
-                const catContainer = document.getElementById("book-categories");
-                catContainer.innerHTML = book.categories.length
-                    ? book.categories.map(cat => `
-                        <a href="/categories/${cat.slug}/" class="badge bg-secondary text-decoration-none me-1">
-                            ${cat.name} 🏷️
-                        </a>`).join('')
-                    : '<span class="text-muted">No categories 📭</span>';
+                const categories = book.categories.map(cat => `<span class="badge">${cat.name}</span>`).join(' ');
+                document.getElementById("book-categories").innerHTML = categories;
 
-                // Summary
                 if (book.summary) {
                     document.getElementById("book-summary-container").classList.remove("d-none");
                     document.getElementById("book-summary").innerText = book.summary;
                 }
 
-                // Publications
-                const pubSection = document.getElementById("publisher-section");
+                const publishersSection = document.getElementById("publisher-section");
                 if (book.publications.length) {
-                    pubSection.innerHTML = `
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
+                    publishersSection.innerHTML = `
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Publisher</th>
+                                    <th>Country</th>
+                                    <th>Date Published</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${book.publications.map(pub => `
                                     <tr>
-                                        <th>Publisher 🏢</th>
-                                        <th>Country 🌍</th>
-                                        <th>Date Published 📅</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${book.publications.map(pub => `
-                                        <tr>
-                                            <td>${pub.publisher.name}</td>
-                                            <td>${pub.country}</td>
-                                            <td>${pub.date_published}</td>
-                                        </tr>`).join('')}
-                                </tbody>
-                            </table>
-                        </div>
+                                        <td>${pub.publisher.name}</td>
+                                        <td>${pub.country}</td>
+                                        <td>${pub.date_published}</td>
+                                    </tr>`).join('')}
+                            </tbody>
+                        </table>
                     `;
                 }
             })
