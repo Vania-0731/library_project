@@ -3,38 +3,30 @@
 {% block title %}Authors - Library App{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">👨‍🎨 Authors</h1>
+<h1>👨‍🎨 Authors</h1>
 
 <div class="row" id="author-list">
     <!-- Aquí se llenarán los autores con JavaScript -->
 </div>
 
 <script>
-    // Hacer una solicitud AJAX para obtener los autores
     fetch('/api/authors')
         .then(response => response.json())
         .then(data => {
             const authorListContainer = document.getElementById('author-list');
             
             if (data.length === 0) {
-                authorListContainer.innerHTML = `
-                    <div class="col-12">
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> No authors available yet. 📭
-                        </div>
-                    </div>
-                `;
+                authorListContainer.innerHTML = `<div class="alert">No authors available yet. 📭</div>`;
             } else {
-                // Iterar sobre los autores y añadirlos al DOM
                 data.forEach(author => {
                     const authorCard = `
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100">
+                        <div class="col-md-4">
+                            <div class="card">
                                 <div class="card-body">
-                                    <h5 class="card-title">${author.name} ✍️</h5>
-                                    ${author.birth_date ? `<p class="card-text"><small class="text-muted">Born: ${author.birth_date} 🎂</small></p>` : ''}
-                                    <p class="card-text">${author.biography.length > 100 ? author.biography.substring(0, 100) + '...' : author.biography}</p>
-                                    <a href="/authors/${author.id}/" class="btn btn-primary">View Details 👀</a>
+                                    <h5>${author.name} ✍️</h5>
+                                    ${author.birth_date ? `<p>Born: ${author.birth_date} 🎂</p>` : ''}
+                                    <p>${author.biography.slice(0, 100)}...</p>
+                                    <a href="/authors/${author.id}/" class="btn">View Details 👀</a>
                                 </div>
                             </div>
                         </div>
