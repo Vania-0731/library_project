@@ -12,7 +12,7 @@ class Author(models.Model):
 
 class AuthorProfile(models.Model):
     """One-to-one model with additional author information"""
-    author = models.OneToOneField(  
+    author = models.OneToOneField(  # 1️⃣➡️1️⃣ One-to-One relationship
         Author, 
         on_delete=models.CASCADE,
         primary_key=True,
@@ -54,7 +54,7 @@ class Publisher(models.Model):
 class Book(models.Model):
     """Model representing a book with multiple relationships"""
     title = models.CharField(max_length=200)
-    author = models.ForeignKey(  
+    author = models.ForeignKey(  # 1️⃣➡️🔢 One-to-Many relationship
         Author, 
         on_delete=models.CASCADE,
         related_name='books'
@@ -62,10 +62,12 @@ class Book(models.Model):
     isbn = models.CharField('ISBN', max_length=13, unique=True)
     publication_date = models.DateField(null=True, blank=True)
     summary = models.TextField(blank=True)
+    # 🔢➡️🔢 Many-to-Many relationship with Category
     categories = models.ManyToManyField(
         Category,
         related_name='books'
     )
+    # 🔢🔗🔢 Many-to-Many relationship with Publisher through Publication
     publishers = models.ManyToManyField(
         Publisher,
         through='Publication',
