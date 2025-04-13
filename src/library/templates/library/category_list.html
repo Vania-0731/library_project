@@ -5,26 +5,48 @@
 {% block content %}
 <h1 class="mb-4">🏷️ Categories</h1>
 
-<div class="row">
-    {% for category in categories %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">{{ category.name }} 🏷️</h5>
-                    <p class="card-text">{{ category.description|truncatechars:100 }}</p>
-                    <p class="card-text">
-                        <span class="badge bg-primary">{{ category.book_count }} book{{ category.book_count|pluralize }} 📚</span>
-                    </p>
-                    <a href="{% url 'category_detail' category.slug %}" class="btn btn-primary">View Books 👀</a>
-                </div>
-            </div>
-        </div>
-    {% empty %}
-        <div class="col-12">
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle"></i> No categories available yet. 📭
-            </div>
-        </div>
-    {% endfor %}
+<div class="row" id="category-list">
+    <!-- Aquí se llenarán las categorías con JavaScript -->
 </div>
+
+<script>
+    // Hacer una solicitud AJAX para obtener las categorías
+    fetch('/api/categories/')
+        .then(response => response.json())
+        .then(data => {
+            const categoryListContainer = document.getElementById('category-list');
+            
+            if (data.length === 0) {
+                categoryListContainer.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> No categories available yet. 📭
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Iterar sobre las categorías y añadirlas al DOM
+                data.forEach(category => {
+                    const categoryCard = `
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">${category.name} 🏷️</h5>
+                                    <p class="card-text">${category.description.length > 100 ? category.description.substring(0, 100) + '...' : category.description}</p>
+                                    <p class="card-text">
+                                        <span class="badge bg-primary">${category.book_count} book${category.book_count > 1 ? 's' : ''} 📚</span>
+                                    </p>
+                                    <a href="/categories/${category.slug}/" class="btn btn-primary">View Books 👀</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    categoryListContainer.innerHTML += categoryCard;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching categories:', error);
+        });
+</script>
 {% endblock %}

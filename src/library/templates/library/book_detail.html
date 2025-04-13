@@ -1,36 +1,26 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ book.title }} - Library App{% endblock %}
+{% block title %}Book - Library App{% endblock %}
 
 {% block content %}
 <div class="card mb-4">
     <div class="card-header bg-primary text-white">
-        <h1 class="mb-0">{{ book.title }} 📖</h1>
+        <h1 class="mb-0" id="book-title">Loading... 📖</h1>
     </div>
     <div class="card-body">
-        <h5><strong>Author:</strong> <a href="{% url 'author_detail' book.author.id %}">{{ book.author.name }} ✍️</a></h5>
-        
-        <p><strong>ISBN:</strong> {{ book.isbn }} 🔢</p>
-        
-        {% if book.publication_date %}
-            <p><strong>Publication Date:</strong> {{ book.publication_date }} 📅</p>
-        {% endif %}
-        
+        <h5><strong>Author:</strong> <a id="author-link" href="#">Loading ✍️</a></h5>
+        <p><strong>ISBN:</strong> <span id="book-isbn">---</span> 🔢</p>
+        <p><strong>Publication Date:</strong> <span id="book-date">---</span> 📅</p>
+
         <div class="mb-3">
             <strong>Categories:</strong>
-            {% for category in categories %}
-                <a href="{% url 'category_detail' category.slug %}" class="badge bg-secondary text-decoration-none me-1">
-                    {{ category.name }} 🏷️
-                </a>
-            {% empty %}
-                <span class="text-muted">No categories 📭</span>
-            {% endfor %}
+            <span id="book-categories"></span>
         </div>
-        
-        {% if book.summary %}
+
+        <div id="book-summary-container" class="d-none">
             <h5>Summary 📝</h5>
-            <p>{{ book.summary }}</p>
-        {% endif %}
+            <p id="book-summary"></p>
+        </div>
     </div>
 </div>
 
@@ -38,37 +28,84 @@
     <div class="card-header bg-primary text-white">
         <h2 class="h5 mb-0">🏢 Publishers</h2>
     </div>
-    <div class="card-body">
-        {% if publications %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Publisher 🏢</th>
-                            <th>Country 🌍</th>
-                            <th>Date Published 📅</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for publication in publications %}
-                            <tr>
-                                <td>{{ publication.publisher.name }}</td>
-                                <td>{{ publication.country }}</td>
-                                <td>{{ publication.date_published }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle"></i> No publisher information available. 📭
-            </div>
-        {% endif %}
+    <div class="card-body" id="publisher-section">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No publisher information available. 📭
+        </div>
     </div>
 </div>
 
 <a href="{% url 'book_list' %}" class="btn btn-secondary mt-4">
     <i class="bi bi-arrow-left"></i> Back to Books
 </a>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const bookId = window.location.pathname.split('/').filter(Boolean).pop();
+
+        fetch(`/api/books/${bookId}/`)
+            .then(response => {
+                if (!response.ok) throw new Error("Book not found");
+                return response.json();
+            })
+            .then(book => {
+                // Title
+                document.getElementById("book-title").innerText = `${book.title} 📖`;
+
+                // Author
+                const authorLink = document.getElementById("author-link");
+                authorLink.href = `/authors/${book.author.id}/`;
+                authorLink.innerText = `${book.author.name} ✍️`;
+
+                // ISBN & Date
+                document.getElementById("book-isbn").innerText = book.isbn;
+                document.getElementById("book-date").innerText = book.publication_date || "N/A";
+
+                // Categories
+                const catContainer = document.getElementById("book-categories");
+                catContainer.innerHTML = book.categories.length
+                    ? book.categories.map(cat => `
+                        <a href="/categories/${cat.slug}/" class="badge bg-secondary text-decoration-none me-1">
+                            ${cat.name} 🏷️
+                        </a>`).join('')
+                    : '<span class="text-muted">No categories 📭</span>';
+
+                // Summary
+                if (book.summary) {
+                    document.getElementById("book-summary-container").classList.remove("d-none");
+                    document.getElementById("book-summary").innerText = book.summary;
+                }
+
+                // Publications
+                const pubSection = document.getElementById("publisher-section");
+                if (book.publications.length) {
+                    pubSection.innerHTML = `
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Publisher 🏢</th>
+                                        <th>Country 🌍</th>
+                                        <th>Date Published 📅</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${book.publications.map(pub => `
+                                        <tr>
+                                            <td>${pub.publisher.name}</td>
+                                            <td>${pub.country}</td>
+                                            <td>${pub.date_published}</td>
+                                        </tr>`).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                document.getElementById("book-title").innerText = "Book not found 😢";
+            });
+    });
+</script>
 {% endblock %}

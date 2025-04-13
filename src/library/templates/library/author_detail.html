@@ -1,82 +1,134 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ author.name }} - Library App{% endblock %}
+{% block title %}Author - Library App{% endblock %}
 
 {% block content %}
-<div class="card mb-4">
+<div id="author-details" class="card mb-4">
     <div class="card-header bg-primary text-white">
-        <h1 class="mb-0">{{ author.name }} ✍️</h1>
+        <h1 id="author-name" class="mb-0">Loading...</h1>
     </div>
     <div class="card-body">
         <div class="row">
             <div class="col-md-8">
-                {% if author.birth_date %}
-                    <p><strong>Birth Date:</strong> {{ author.birth_date }} 🎂</p>
-                {% endif %}
-                
-                {% if author.biography %}
-                    <h4>Biography 📜</h4>
-                    <p>{{ author.biography }}</p>
-                {% endif %}
+                <div id="author-birth-date"></div>
+                <div id="author-biography"></div>
             </div>
             
             <div class="col-md-4">
-                {% if author.profile %}
-                    <div class="card">
-                        <div class="card-header">
-                            <h5>👤 Profile Information</h5>
-                        </div>
-                        <div class="card-body">
-                            {% if author.profile.photo %}
-                                <img src="{{ author.profile.photo.url }}" class="img-fluid rounded mb-3" alt="{{ author.name }}">
-                            {% endif %}
-                            
-                            {% if author.profile.website %}
-                                <p><strong>Website:</strong> <a href="{{ author.profile.website }}" target="_blank">{{ author.profile.website }} 🌐</a></p>
-                            {% endif %}
-                            
-                            {% if author.profile.twitter_handle %}
-                                <p><strong>Twitter:</strong> {{ author.profile.twitter_handle }} 🐦</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                {% endif %}
+                <div id="author-profile"></div>
             </div>
         </div>
     </div>
 </div>
 
-<h2>📚 Books by {{ author.name }}</h2>
+<h2>📚 Books</h2>
 
-<div class="row">
-    {% for book in books %}
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">{{ book.title }} 📖</h5>
-                    <p class="card-text">
-                        <small class="text-muted">ISBN: {{ book.isbn }} 🔢</small>
-                    </p>
-                    {% if book.publication_date %}
-                        <p class="card-text">
-                            <small class="text-muted">Published: {{ book.publication_date }} 📅</small>
-                        </p>
-                    {% endif %}
-                    <p class="card-text">{{ book.summary|truncatechars:100 }}</p>
-                    <a href="{% url 'book_detail' book.id %}" class="btn btn-primary">View Book 👀</a>
-                </div>
-            </div>
+<div id="books-list" class="row">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Loading books... 📭
         </div>
-    {% empty %}
-        <div class="col-12">
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle"></i> This author has no books yet. 📭
-            </div>
-        </div>
-    {% endfor %}
+    </div>
 </div>
 
 <a href="{% url 'author_list' %}" class="btn btn-secondary mt-4">
     <i class="bi bi-arrow-left"></i> Back to Authors
 </a>
+
+<script>
+    // Obtener el authorId desde la URL
+    const urlParts = window.location.pathname.split('/');
+    const authorId = urlParts[urlParts.length - 2]; // asume /authors/<id>/
+
+    function fetchAuthorDetails() {
+        fetch(`/api/authors/${authorId}/`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('author-name').innerText = data.name + " ✍️";
+
+                if (data.birth_date) {
+                    document.getElementById('author-birth-date').innerHTML =
+                        `<p><strong>Birth Date:</strong> ${data.birth_date} 🎂</p>`;
+                }
+
+                if (data.biography) {
+                    document.getElementById('author-biography').innerHTML =
+                        `<h4>Biography 📜</h4><p>${data.biography}</p>`;
+                }
+
+                if (data.profile) {
+                    const profile = data.profile;
+                    let html = `<div class="card">
+                        <div class="card-header"><h5>👤 Profile Information</h5></div>
+                        <div class="card-body">`;
+
+                    if (profile.photo) {
+                        html += `<img src="${profile.photo}" class="img-fluid rounded mb-3" alt="${data.name}">`;
+                    }
+                    if (profile.website) {
+                        html += `<p><strong>Website:</strong> <a href="${profile.website}" target="_blank">${profile.website} 🌐</a></p>`;
+                    }
+                    if (profile.twitter_handle) {
+                        html += `<p><strong>Twitter:</strong> ${profile.twitter_handle} 🐦</p>`;
+                    }
+
+                    html += `</div></div>`;
+                    document.getElementById('author-profile').innerHTML = html;
+                }
+
+                // Ahora que tenemos el autor, buscamos los libros
+                fetchBooksByAuthorId(data.id);
+            })
+            .catch(error => {
+                console.error('Error fetching author:', error);
+            });
+    }
+
+    function fetchBooksByAuthorId(authorId) {
+        fetch(`/api/books/`)
+            .then(response => response.json())
+            .then(data => {
+                const booksList = document.getElementById('books-list');
+                booksList.innerHTML = '';
+
+                // Filtramos solo los libros del autor
+                const authorBooks = data.filter(book => book.author.id === parseInt(authorId));
+
+                if (authorBooks.length === 0) {
+                    booksList.innerHTML = `
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle"></i> This author has no books yet. 📭
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                authorBooks.forEach(book => {
+                    const card = document.createElement('div');
+                    card.classList.add('col-md-4', 'mb-4');
+                    card.innerHTML = `
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">${book.title} 📖</h5>
+                                <p class="card-text"><small class="text-muted">ISBN: ${book.isbn} 🔢</small></p>
+                                ${book.publication_date ? `<p class="card-text"><small class="text-muted">Published: ${book.publication_date} 📅</small></p>` : ''}
+                                <p class="card-text">${book.summary.slice(0, 100)}...</p>
+                                <a href="/books/${book.id}" class="btn btn-primary">View Book 👀</a>
+                            </div>
+                        </div>
+                    `;
+                    booksList.appendChild(card);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching books:', error);
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchAuthorDetails);
+</script>
+
+
 {% endblock %}

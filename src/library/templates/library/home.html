@@ -15,7 +15,7 @@
         <div class="card text-center mb-4">
             <div class="card-body">
                 <h5 class="card-title">📕 Books</h5>
-                <p class="card-text display-4">{{ total_books }}</p>
+                <p class="card-text display-4" id="total_books">Loading...</p>
                 <a href="{% url 'book_list' %}" class="btn btn-primary">Browse Books</a>
             </div>
         </div>
@@ -24,7 +24,7 @@
         <div class="card text-center mb-4">
             <div class="card-body">
                 <h5 class="card-title">👨‍🎨 Authors</h5>
-                <p class="card-text display-4">{{ total_authors }}</p>
+                <p class="card-text display-4" id="total_authors">Loading...</p>
                 <a href="{% url 'author_list' %}" class="btn btn-primary">View Authors</a>
             </div>
         </div>
@@ -33,7 +33,7 @@
         <div class="card text-center mb-4">
             <div class="card-body">
                 <h5 class="card-title">🏷️ Categories</h5>
-                <p class="card-text display-4">{{ total_categories }}</p>
+                <p class="card-text display-4" id="total_categories">Loading...</p>
                 <a href="{% url 'category_list' %}" class="btn btn-primary">Explore Categories</a>
             </div>
         </div>
@@ -42,7 +42,7 @@
         <div class="card text-center mb-4">
             <div class="card-body">
                 <h5 class="card-title">🏢 Publishers</h5>
-                <p class="card-text display-4">{{ total_publishers }}</p>
+                <p class="card-text display-4" id="total_publishers">Loading...</p>
                 <a href="#" class="btn btn-primary">See Publishers</a>
             </div>
         </div>
@@ -56,15 +56,8 @@
                 <h5><i class="bi bi-journal-check"></i> Recent Books 📚</h5>
             </div>
             <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    {% for book in recent_books %}
-                        <li class="list-group-item">
-                            <a href="{% url 'book_detail' book.id %}">{{ book.title }}</a>
-                            <small class="text-muted d-block">by {{ book.author.name }}</small>
-                        </li>
-                    {% empty %}
-                        <li class="list-group-item">No books available yet. 📭</li>
-                    {% endfor %}
+                <ul class="list-group list-group-flush" id="recent_books">
+                    <li class="list-group-item">Loading...</li>
                 </ul>
             </div>
         </div>
@@ -75,18 +68,56 @@
                 <h5><i class="bi bi-tags"></i> Popular Categories 🔝</h5>
             </div>
             <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    {% for category in categories %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <a href="{% url 'category_detail' category.slug %}">{{ category.name }}</a>
-                            <span class="badge bg-primary rounded-pill">{{ category.book_count }}</span>
-                        </li>
-                    {% empty %}
-                        <li class="list-group-item">No categories available yet. 📭</li>
-                    {% endfor %}
+                <ul class="list-group list-group-flush" id="popular_categories">
+                    <li class="list-group-item">Loading...</li>
                 </ul>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Realizamos una solicitud Fetch para obtener los datos de la API
+    fetch('/api/home/')
+        .then(response => response.json())
+        .then(data => {
+            // Inyectamos los datos en los elementos correspondientes
+
+            // Total de libros, autores, categorías y publishers
+            document.getElementById('total_books').textContent = data.total_books;
+            document.getElementById('total_authors').textContent = data.total_authors;
+            document.getElementById('total_categories').textContent = data.total_categories;
+            document.getElementById('total_publishers').textContent = data.total_publishers;
+
+            // Actualizar lista de libros recientes
+            const recentBooksList = document.getElementById('recent_books');
+            recentBooksList.innerHTML = ''; // Limpiar los elementos existentes
+            data.recent_books.forEach(book => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('list-group-item');
+                listItem.innerHTML = `
+                    <a href="/books/${book.id}/">${book.title}</a>
+                    <small class="text-muted d-block">by ${book.author.name}</small>
+                `;
+                recentBooksList.appendChild(listItem);
+            });
+
+            // Actualizar lista de categorías populares
+            const popularCategoriesList = document.getElementById('popular_categories');
+            popularCategoriesList.innerHTML = ''; // Limpiar los elementos existentes
+            data.categories.forEach(category => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
+                listItem.innerHTML = `
+                    <a href="/categories/${category.slug}/">${category.name}</a>
+                    <span class="badge bg-primary rounded-pill">${category.book_count}</span>
+                `;
+                popularCategoriesList.appendChild(listItem);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading data:', error);
+        });
+</script>
+
 {% endblock %}
