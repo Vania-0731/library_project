@@ -3,42 +3,31 @@
 {% block title %}Books - Library App{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">📚 All Books</h1>
+<h1>📚 All Books</h1>
 
 <div class="row" id="book-list">
     <!-- Aquí se llenarán los libros con JavaScript -->
 </div>
 
 <script>
-    // Hacer una solicitud AJAX para obtener los libros
     fetch('/api/books')
         .then(response => response.json())
         .then(data => {
             const bookListContainer = document.getElementById('book-list');
             
             if (data.length === 0) {
-                bookListContainer.innerHTML = `
-                    <div class="col-12">
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> No books available yet. 📭
-                        </div>
-                    </div>
-                `;
+                bookListContainer.innerHTML = `<div class="alert">No books available yet. 📭</div>`;
             } else {
-                // Iterar sobre los libros y añadirlos al DOM
                 data.forEach(book => {
                     const bookCard = `
-                        <div class="col-md-4 mb-4">
-                            <div class="card h-100">
+                        <div class="col-md-4">
+                            <div class="card">
                                 <div class="card-body">
-                                    <h5 class="card-title">${book.title} 📖</h5>
+                                    <h5>${book.title} 📖</h5>
                                     <h6 class="card-subtitle mb-2 text-muted">By ${book.author.name} ✍️</h6>
-                                    <p class="card-text">
-                                        <small class="text-muted">ISBN: ${book.isbn} 🔢</small>
-                                    </p>
-                                    ${book.publication_date ? `<p class="card-text"><small class="text-muted">Published: ${book.publication_date} 📅</small></p>` : ''}
-                                    <p class="card-text">${book.summary.length > 100 ? book.summary.substring(0, 100) + '...' : book.summary}</p>
-                                    <a href="/books/${book.id}/" class="btn btn-primary">View Details 👀</a>
+                                    <p><small class="text-muted">ISBN: ${book.isbn} 🔢</small></p>
+                                    <p>${book.summary.slice(0, 100)}...</p>
+                                    <a href="/books/${book.id}/" class="btn">View Details 👀</a>
                                 </div>
                             </div>
                         </div>
